@@ -1,0 +1,9 @@
+{
+  "manifest_version": 3,
+  "name": "Start",
+  "version": "1.0.0",
+  "description": "A personal new tab: today's poster, a daily quote, your apps and a Spotify remote.",
+  "chrome_url_overrides": { "newtab": "newtab.html" },
+  "permissions": ["bookmarks", "storage", "unlimitedStorage", "identity", "favicon", "search"],
+  "icons": { "128": "icons/icon128.png" }
+}

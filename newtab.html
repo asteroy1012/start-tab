@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#020202">
+<title>New Tab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Instrument+Serif&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/platform.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/boot.js"></script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+  <symbol id="i-prev" viewBox="0 0 24 24"><path d="M6 5v14M18 6l-9 6 9 6z"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="M18 5v14M6 6l9 6-9 6z"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" stroke-width="3"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-devices" viewBox="0 0 24 24"><rect x="4" y="3" width="12" height="18" rx="2"/><circle cx="10" cy="14" r="3"/><path d="M10 7h.01M19 8v8"/></symbol>
+  <symbol id="i-computer" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M2 20h20"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></symbol>
+  <symbol id="i-speaker" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="14" r="4"/><path d="M12 6h.01"/></symbol>
+  <symbol id="i-browser" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M7 6.5h.01M10 6.5h.01"/></symbol>
+</svg>
+
+<div class="wall">
+  <main class="field">
+    <div class="when">
+      <h1 class="clock num" id="clock">--:--</h1>
+      <p class="date" id="date"></p>
+    </div>
+
+    <form class="search" id="search" role="search">
+      <svg class="i" aria-hidden="true"><use href="#i-search"/></svg>
+      <input id="q" type="text" autocomplete="off" spellcheck="false" placeholder="Search or type a URL" aria-label="Search or type a URL">
+      <kbd>/</kbd>
+    </form>
+
+    <blockquote class="quote" id="quote">
+      <p id="quote-text"></p>
+      <footer><cite id="quote-author"></cite> · today’s quote</footer>
+    </blockquote>
+
+    <nav class="apps-panel" aria-labelledby="apps-label">
+      <div class="panel-head">
+        <h2 id="apps-label">Your apps</h2>
+        <button type="button" class="link" id="apps-edit">Edit</button>
+      </div>
+      <div class="apps" id="apps"></div>
+    </nav>
+
+    <section class="player" id="player" data-state="setup" aria-label="Spotify">
+      <div class="now">
+        <a class="art" id="p-art" target="_blank" rel="noopener" tabindex="-1">
+          <svg class="i" aria-hidden="true"><use href="#i-note"/></svg>
+          <img alt="" hidden>
+        </a>
+        <div class="meta">
+          <b id="p-title">Spotify</b>
+          <small id="p-sub">Control what’s playing on any device</small>
+        </div>
+      </div>
+      <div class="bar num" aria-hidden="true">
+        <span id="p-pos">0:00</span>
+        <div class="track"><i id="p-fill"></i></div>
+        <span id="p-dur">0:00</span>
+      </div>
+      <div class="ctrls">
+        <button type="button" class="ctl" id="p-prev" aria-label="Previous track"><svg class="i"><use href="#i-prev"/></svg></button>
+        <button type="button" class="ctl play" id="p-toggle" aria-label="Play"><svg class="i"><use href="#i-play"/></svg></button>
+        <button type="button" class="ctl" id="p-next" aria-label="Next track"><svg class="i"><use href="#i-next"/></svg></button>
+        <button type="button" class="ctl" id="p-devices" aria-label="Choose where to play" aria-haspopup="menu" aria-expanded="false" aria-controls="device-menu"><svg class="i"><use href="#i-devices"/></svg></button>
+        <button type="button" class="pill" id="p-action">Connect Spotify</button>
+      </div>
+      <div class="device-menu" id="device-menu" role="menu" aria-label="Play on" hidden></div>
+    </section>
+  </main>
+
+  <figure class="poster-wrap">
+    <img class="poster" id="poster" alt="">
+    <div class="empty-slot">
+      <h2>Hang your first poster</h2>
+      <p>Tall pictures look best. They stay on this computer, and the page takes its colours from them.</p>
+      <button type="button" class="pill" id="first-wallpaper">Add wallpaper</button>
+    </div>
+    <div class="wall-controls">
+      <button type="button" class="ghost" id="wp-prev" aria-label="Previous wallpaper"><svg class="i"><use href="#i-left"/></svg></button>
+      <div class="dots" id="dots"></div>
+      <button type="button" class="ghost" id="wp-next" aria-label="Next wallpaper"><svg class="i"><use href="#i-right"/></svg></button>
+      <button type="button" class="ghost" id="open-settings" aria-label="Settings"><svg class="i"><use href="#i-gear"/></svg></button>
+    </div>
+  </figure>
+</div>
+
+<dialog id="settings" aria-labelledby="settings-title">
+  <form method="dialog" class="sheet">
+    <header class="sheet-head">
+      <h2 id="settings-title">Settings</h2>
+      <button class="ghost" value="close" aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button>
+    </header>
+
+    <section class="set">
+      <h3>Spotify</h3>
+      <p class="help" id="sp-status">Not connected.</p>
+      <label for="sp-client">Client ID</label>
+      <input id="sp-client" type="text" spellcheck="false" autocomplete="off" placeholder="From your app on developer.spotify.com">
+      <label for="sp-redirect">Redirect URI <span class="muted">add this exactly in your Spotify app</span></label>
+      <div class="joined">
+        <input id="sp-redirect" type="text" readonly>
+        <button type="button" class="pill quiet" id="sp-copy">Copy</button>
+      </div>
+      <div class="row-actions">
+        <button type="button" class="pill" id="sp-connect">Connect</button>
+        <button type="button" class="pill quiet" id="sp-disconnect" hidden>Disconnect</button>
+        <a class="link" href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener">Open Spotify dashboard</a>
+      </div>
+    </section>
+
+    <section class="set">
+      <h3>Wallpapers</h3>
+      <div class="thumbs" id="thumbs"></div>
+      <div class="row-actions">
+        <label class="pill quiet file">Add wallpaper<input type="file" id="wp-file" accept="image/*" multiple hidden></label>
+        <div class="seg" role="radiogroup" aria-label="Change wallpaper">
+          <label><input type="radio" name="rotate" value="daily"><span>Daily</span></label>
+          <label><input type="radio" name="rotate" value="tab"><span>Every new tab</span></label>
+        </div>
+      </div>
+    </section>
+
+    <section class="set two">
+      <div>
+        <h3>Clock</h3>
+        <div class="seg" role="radiogroup" aria-label="Clock">
+          <label><input type="radio" name="clock" value="24"><span>24-hour</span></label>
+          <label><input type="radio" name="clock" value="12"><span>12-hour</span></label>
+        </div>
+      </div>
+      <div>
+        <h3><label for="folder">Apps folder</label></h3>
+        <input id="folder" type="text" spellcheck="false" placeholder="Dashboard">
+        <p class="help small">A bookmarks folder with this name. Without one, your bookmarks bar is used.</p>
+      </div>
+    </section>
+  </form>
+</dialog>
+
+<dialog id="add-app" aria-labelledby="add-title">
+  <form method="dialog" class="sheet small" id="add-form">
+    <header class="sheet-head">
+      <h2 id="add-title">Add an app</h2>
+      <button class="ghost" value="cancel" aria-label="Close" formnovalidate><svg class="i"><use href="#i-x"/></svg></button>
+    </header>
+    <label for="add-name">Name</label>
+    <input id="add-name" type="text" required placeholder="Figma">
+    <label for="add-url">Address</label>
+    <input id="add-url" type="text" required placeholder="figma.com">
+    <p class="help small" id="add-where"></p>
+    <div class="row-actions end">
+      <button class="pill" value="add">Add</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="js/quotes.js"></script>
+<script src="js/spotify.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

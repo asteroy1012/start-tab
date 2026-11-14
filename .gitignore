@@ -1,0 +1,9 @@
+# Everyone brings their own wallpapers: keep pictures and the list out of the repo.
+wallpapers/*
+!wallpapers/README.md
+!wallpapers/index.example.json
+
+# OS clutter
+.DS_Store
+Thumbs.db
+desktop.ini
