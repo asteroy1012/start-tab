@@ -108,6 +108,8 @@ a { color: inherit; text-decoration: none; }
 .quote footer { display: flex; align-items: center; flex-wrap: wrap; color: var(--muted); font-size: 14px; line-height: 20px; margin-top: 16px; }
 .quote cite { font-style: normal; color: var(--text); }
 .quote footer .sep { white-space: pre; }
+.quote .quote-credit { color: inherit; text-decoration: none; }
+.quote .quote-credit:hover { color: var(--text); text-decoration: underline; }
 #quote-next { margin-left: 6px; color: var(--faint); opacity: 0; transition: opacity .15s, background-color .15s, color .15s; }
 .quote:hover #quote-next, #quote-next:focus-visible { opacity: 1; }
 #quote-next:hover { color: var(--text); }

@@ -2,7 +2,7 @@
 (() => {
   const $ = sel => document.querySelector(sel);
   const DEFAULTS = {
-    rotate: 'daily', clock: '24', folder: 'Dashboard', float: 'on',
+    rotate: 'daily', clock: '24', folder: 'Dashboard', float: 'on', quotes: 'online',
     source: null, themes: Discover.DEFAULT_THEMES, customThemes: [], veil: 100,
   };
   const MAX_APPS = 11; // plus the Add tile: three rows of four
@@ -60,7 +60,12 @@
     const ampm = settings.clock === '12' ? (h < 12 ? ' · AM' : ' · PM') : '';
     $('#date').textContent = DATE_FORMAT.format(now) + ampm;
     const day = dayNumber(now);
-    if (day !== lastDay) { lastDay = day; renderQuote(quoteForDay(now, ownQuotes), true); }
+    if (day !== lastDay) {
+      const first = lastDay === null;
+      lastDay = day;
+      renderQuote(dailyQuote(now), true);
+      if (!first) refreshOnlineQuotes(); // past midnight: fetch the new day's batch
+    }
   }
   const DATE_FORMAT = new Intl.DateTimeFormat(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
   function startClock() {
@@ -68,24 +73,59 @@
     setTimeout(() => { tick(); setInterval(tick, 1000); }, 1000 - (Date.now() % 1000));
   }
 
-  let shownQuote = -1;
+  // Quotes come from today's ZenQuotes batch (js/zenquotes.js) when online quotes are on and the batch
+  // is in; otherwise from the built-in list. Your own quotes join either way.
+  const onlineQuotes = () => (settings.quotes !== 'local' && ZenQuotes.list()) || null;
+
+  function dailyQuote(date = new Date()) {
+    const online = onlineQuotes();
+    if (!online) return quoteForDay(date, ownQuotes);
+    const pool = [...online.map(([text, author]) => ({ text, author, source: 'zenquotes' })),
+      ...ownQuotes.filter(q => Array.isArray(q) && q[0]).map(([text, author = '']) => ({ text, author }))];
+    return pool[dayNumber(date) % pool.length]; // the same quote in every tab all day
+  }
+
+  function anotherQuote() {
+    const pool = [...(onlineQuotes() || []).map(([text, author]) => ({ text, author, source: 'zenquotes' })),
+      ...quotePool(ownQuotes).map(([text, author = '']) => ({ text, author }))];
+    let q = pool[Math.floor(Math.random() * pool.length)];
+    if (pool.length > 1 && q.text === shownQuote) q = pool[(pool.indexOf(q) + 1) % pool.length];
+    return q;
+  }
+
+  let shownQuote = null;
+  let showingDaily = true;
   function renderQuote(q, daily) {
-    shownQuote = q.index;
+    shownQuote = q.text;
+    showingDaily = daily;
     $('#quote-text').textContent = q.text;
     $('#quote-author').textContent = q.author;
     $('#quote-author').hidden = $('#quote-sep').hidden = !q.author;
     $('#quote-kind').textContent = daily ? 'today’s quote' : 'another quote';
+    $('#quote-credit').hidden = $('#quote-credit-sep').hidden = q.source !== 'zenquotes';
     $('#quote').dataset.length = q.text.length > 62 ? 'long' : 'short';
   }
 
+  // Fetches today's batch in the background; once it arrives, it replaces the built-in quote
+  // unless you have shuffled to another one.
+  async function refreshOnlineQuotes() {
+    if (settings.quotes === 'local' || DEMO) return;
+    if (await ZenQuotes.refresh() && showingDaily) renderQuote(dailyQuote(), true);
+  }
+
   function initQuotes() {
-    $('#quote-next').addEventListener('click', () => renderQuote(randomQuote(ownQuotes, shownQuote), false));
+    $('#quote-next').addEventListener('click', () => renderQuote(anotherQuote(), false));
     $('#quotes-own').addEventListener('change', async e => {
       ownQuotes = parseQuotes(e.target.value);
       await Store.set('quotes.own', ownQuotes);
       e.target.value = formatQuotes(ownQuotes);
-      renderQuote(quoteForDay(new Date(), ownQuotes), true);
+      renderQuote(dailyQuote(), true);
     });
+    document.querySelectorAll('input[name="quotesrc"]').forEach(r => r.addEventListener('change', async () => {
+      await saveSettings({ quotes: r.value });
+      renderQuote(dailyQuote(), true);
+      refreshOnlineQuotes();
+    }));
   }
 
   /* ---------- search ---------- */
@@ -1086,6 +1126,7 @@
     $('#sp-redirect').value = Spotify.redirectUri() || 'Shown once installed as an extension';
     refreshSpotifyStatus();
     document.querySelectorAll('input[name="rotate"]').forEach(r => { r.checked = r.value === settings.rotate; });
+    document.querySelectorAll('input[name="quotesrc"]').forEach(r => { r.checked = r.value === settings.quotes; });
     document.querySelectorAll('input[name="clock"]').forEach(r => { r.checked = r.value === settings.clock; });
     document.querySelectorAll('input[name="float"]').forEach(r => { r.checked = r.value === settings.float; });
     $('#folder').value = settings.folder;
@@ -1287,7 +1328,9 @@
   async function start() {
     settings = { ...DEFAULTS, ...(await Store.get('settings', {})) };
     ownQuotes = await Store.get('quotes.own', []);
+    await ZenQuotes.load(); // today's batch, if already fetched, so the first quote painted is the right one
     startClock();
+    refreshOnlineQuotes();
     initSearch();
     initQuotes();
     initAppKeys();

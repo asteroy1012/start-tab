@@ -54,7 +54,7 @@
     <blockquote class="quote" id="quote">
       <p id="quote-text"></p>
       <footer>
-        <cite id="quote-author"></cite><span class="sep" id="quote-sep"> · </span><span id="quote-kind">today’s quote</span>
+        <cite id="quote-author"></cite><span class="sep" id="quote-sep"> · </span><span id="quote-kind">today’s quote</span><span class="sep" id="quote-credit-sep" hidden> · </span><a class="quote-credit" id="quote-credit" href="https://zenquotes.io/" target="_blank" rel="noopener" hidden>via ZenQuotes</a>
         <button type="button" class="ghost small" id="quote-next" aria-label="Show another quote" title="Another quote"><svg class="i"><use href="#i-shuffle"/></svg></button>
       </footer>
     </blockquote>
@@ -208,7 +208,13 @@
     </section>
 
     <section class="set">
-      <h3><label for="quotes-own">Your quotes</label></h3>
+      <h3>Quotes</h3>
+      <div class="seg" role="radiogroup" aria-label="Where quotes come from">
+        <label><input type="radio" name="quotesrc" value="online"><span>Online</span></label>
+        <label><input type="radio" name="quotesrc" value="local"><span>Built-in only</span></label>
+      </div>
+      <p class="help small">Online fetches a fresh batch of 50 quotes from <a class="link" href="https://zenquotes.io/" target="_blank" rel="noopener">ZenQuotes</a> once a day. Without internet, the built-in quotes fill in.</p>
+      <label for="quotes-own">Your quotes</label>
       <textarea id="quotes-own" rows="4" spellcheck="true" placeholder="Stay hungry, stay foolish. — Stewart Brand"></textarea>
       <p class="help small">One per line, with the author after a dash. They join the daily rotation.</p>
     </section>
@@ -246,6 +252,7 @@
 </dialog>
 
 <script src="js/quotes.js"></script>
+<script src="js/zenquotes.js"></script>
 <script src="js/discover.js"></script>
 <script src="js/spotify.js"></script>
 <script src="js/app.js"></script>

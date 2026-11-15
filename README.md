@@ -105,7 +105,7 @@ Pictures you've added plus the ones you kept from Discover, cycled in turn.
 
 ## Daily quote
 
-87 quotes, one per day, all bundled locally so it works offline.
+A new quote every day, the same in every tab. With **Online** on (the default, Settings → Quotes), the extension fetches a fresh batch of 50 quotes from [ZenQuotes](https://zenquotes.io/) once a day, so they keep changing instead of cycling through a fixed list. No sign-up or key is needed. Without internet, or with **Built-in only**, the 87 quotes bundled in `js/quotes.js` are used instead. Quotes from ZenQuotes show a small "via ZenQuotes" link, which their free service asks for.
 
 - **Your own quotes:** add them in Settings → Your quotes, one per line with the author after a dash (`Stay hungry, stay foolish. — Stewart Brand`). They join the daily rotation.
 - **Another quote:** point at the quote and click the shuffle button. Tomorrow it goes back to the daily pick.
@@ -121,7 +121,7 @@ Type an address (`github.com`, `localhost:3000`, `192.168.1.1`) to go there, or 
 
 ## Offline and privacy
 
-The fonts (Inter and Instrument Serif, latin subsets) ship in `fonts/`, so opening a new tab makes no request to Google. The page only goes online for Spotify (once you've connected it) and, with Discover on, for Unsplash: one request for 30 photos every so often, plus the photos themselves.
+The fonts (Inter and Instrument Serif, latin subsets) ship in `fonts/`, so opening a new tab makes no request to Google. The page only goes online for Spotify (once you've connected it), with Discover on for Unsplash (one request for 30 photos every so often, plus the photos themselves), and with online quotes on, for ZenQuotes (one request a day).
 
 ## Files
 
@@ -135,7 +135,8 @@ The fonts (Inter and Instrument Serif, latin subsets) ship in `fonts/`, so openi
 | `js/float.js` | The floating player added to web pages |
 | `js/discover.js` | Discover: finds and queues Unsplash photos by theme |
 | `js/theme.js` | Reads a poster and derives the page colours |
-| `js/quotes.js` | The quote list, and parsing your own quotes |
+| `js/quotes.js` | The built-in quote list, and parsing your own quotes |
+| `js/zenquotes.js` | Online quotes: fetches and stores the daily batch from ZenQuotes |
 | `js/platform.js` | Chrome APIs, with stand-ins so the page also opens as a plain file |
 | `fonts/` | Bundled Inter and Instrument Serif (SIL Open Font License) |
 | `wallpapers/` | Your own pictures and `index.json` (kept out of git) |
