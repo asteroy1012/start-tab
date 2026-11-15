@@ -53,7 +53,7 @@ const Platform = {
 
   // Apps come from a bookmarks folder (default "Dashboard"); without one, from the bookmarks bar.
   async apps(folderName) {
-    if (!IS_EXTENSION) return { folderId: null, items: PREVIEW_APPS };
+    if (!IS_EXTENSION) return { folderId: null, items: PREVIEW_APPS.map((b, index) => ({ ...b, id: String(index), index })) };
     const matches = await chrome.bookmarks.search({ title: folderName });
     const folder = matches.find(n => !n.url);
     const parentId = folder ? folder.id : '1';
@@ -67,6 +67,18 @@ const Platform = {
     let folder = matches.find(n => !n.url);
     if (!folder) folder = await chrome.bookmarks.create({ parentId: '1', title: folderName });
     await chrome.bookmarks.create({ parentId: folder.id, title, url });
+  },
+
+  // Moves a bookmark to just before (or after) another one in the same folder.
+  // chrome.bookmarks.move counts the index as it was before the moved item is taken out.
+  async moveApp(node, target, after) {
+    if (!IS_EXTENSION) {
+      const [moved] = PREVIEW_APPS.splice(node.index, 1);
+      const to = PREVIEW_APPS.findIndex(b => b.url === target.url && b.title === target.title);
+      PREVIEW_APPS.splice(to + (after ? 1 : 0), 0, moved);
+      return;
+    }
+    await chrome.bookmarks.move(node.id, { parentId: target.parentId, index: target.index + (after ? 1 : 0) });
   },
 
   openBookmarkManager(folderId) {

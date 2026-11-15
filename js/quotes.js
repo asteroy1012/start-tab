@@ -1,4 +1,5 @@
 // One quote per day, chosen by the date, so it changes at midnight and works offline.
+// Edit this list to change the bundled quotes, or add your own in Settings → Your quotes.
 const QUOTES = [
   ['The happiness of your life depends upon the quality of your thoughts.', 'Marcus Aurelius'],
   ['Waste no more time arguing what a good man should be. Be one.', 'Marcus Aurelius'],
@@ -89,10 +90,41 @@ const QUOTES = [
   ['Fall seven times, stand up eight.', 'Japanese proverb'],
 ];
 
-function quoteForDay(date = new Date()) {
+const gcd = (a, b) => (b ? gcd(b, a % b) : a);
+
+// The pool is the bundled list plus the user's own quotes (Settings → Your quotes).
+function quotePool(extra = []) {
+  return [...QUOTES, ...extra.filter(q => Array.isArray(q) && q[0])];
+}
+
+function quoteForDay(date = new Date(), extra = []) {
+  const pool = quotePool(extra);
   const day = Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000);
   // A fixed stride walks the list in a scrambled but repeatable order, so neighbours do not share an author.
-  const index = (day * 37) % QUOTES.length;
-  const [text, author] = QUOTES[index];
-  return { text, author };
+  // The stride must share no factor with the pool size, or some quotes would never come round.
+  let stride = 37;
+  while (gcd(stride, pool.length) !== 1) stride++;
+  const index = (day * stride) % pool.length;
+  const [text, author = ''] = pool[index];
+  return { text, author, index };
 }
+
+// A different quote from the pool, for the shuffle button.
+function randomQuote(extra = [], notIndex = -1) {
+  const pool = quotePool(extra);
+  let index = Math.floor(Math.random() * pool.length);
+  if (pool.length > 1 && index === notIndex) index = (index + 1) % pool.length;
+  const [text, author = ''] = pool[index];
+  return { text, author, index };
+}
+
+// "Quote text — Author" per line. The author follows the last dash with spaces round it (—, – or -).
+function parseQuotes(text) {
+  return text.split(/\r?\n/).map(line => line.trim()).filter(Boolean).map(line => {
+    const m = line.match(/^(.*\S)\s+[—–-]\s+([^—–]+)$/);
+    const quote = (m ? m[1] : line).replace(/^["“]|["”]$/g, '').trim();
+    return [quote, m ? m[2].trim() : ''];
+  }).filter(q => q[0]);
+}
+
+const formatQuotes = list => list.map(([q, a]) => (a ? `${q} — ${a}` : q)).join('\n');
