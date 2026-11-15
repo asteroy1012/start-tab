@@ -5,7 +5,6 @@
     rotate: 'daily', clock: '24', folder: 'Dashboard', float: 'on', quotes: 'online',
     source: null, themes: Discover.DEFAULT_THEMES, customThemes: [], veil: 100,
   };
-  const MAX_APPS = 11; // plus the Add tile: three rows of four
   const PARAMS = new URLSearchParams(location.search);
   const DEMO = PARAMS.has('demo');
 
@@ -161,74 +160,175 @@
   }
 
   /* ---------- apps (from Chrome bookmarks) ---------- */
+  // The grid shows only as many tiles as fit between the search box and the player (four rows at most).
+  // When there are more apps than that, the last tile becomes "+N more", which opens every app in a panel.
+  const MAX_ROWS = 4;
+  const NARROW = window.matchMedia('(max-width: 860px)'); // matches the one-column layout in css/style.css
+  let allApps = [];
   let dragFrom = null; // index of the app tile being dragged
+
+  const appName = b => {
+    if (b.title) return b.title;
+    try { return new URL(b.url).hostname.replace(/^www\./, ''); } catch { return b.url; }
+  };
+
   async function renderApps() {
-    const box = $('#apps');
     let result;
     try { result = await Platform.apps(settings.folder || DEFAULTS.folder); }
     catch { result = { folderId: null, items: [] }; }
     appsFolderId = result.folderId;
-    const items = result.items.slice(0, MAX_APPS);
-    box.replaceChildren();
+    allApps = result.items;
+    layoutApps();
+    if ($('#all-apps').open) renderAllApps();
+  }
 
-    items.forEach((b, i) => {
-      const a = document.createElement('a');
-      a.className = 'app';
-      a.href = b.url;
-      a.title = b.title || b.url;
-      a.draggable = true;
-      const img = new Image(28, 28);
-      img.alt = ''; img.loading = 'eager'; img.draggable = false;
-      img.src = Platform.favicon(b.url);
-      const label = document.createElement('span');
-      let host = b.url;
-      try { host = new URL(b.url).hostname.replace(/^www\./, ''); } catch { /* keep the raw URL */ }
-      label.textContent = b.title || host;
-      a.append(img, label);
-      if (i < 9) {
-        const k = document.createElement('kbd');
-        k.textContent = `Alt ${i + 1}`;
-        a.append(k);
-      }
+  // How many tiles fit: the columns the grid has, times the rows that fit in the space it was given.
+  function appsCapacity() {
+    const box = $('#apps');
+    const style = getComputedStyle(box);
+    const cols = style.gridTemplateColumns.split(' ').filter(Boolean).length || 4;
+    const gap = parseFloat(style.rowGap) || 14;
+    const tile = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tile-h')) || 92;
+    // In the one-column layout of narrow windows the page scrolls, so there is no fixed space to fit.
+    if (NARROW.matches) return cols * MAX_ROWS;
+    const room = $('.apps-panel').getBoundingClientRect().bottom - box.getBoundingClientRect().top;
+    const rows = Math.max(1, Math.min(MAX_ROWS, Math.floor((room + gap) / (tile + gap))));
+    return cols * rows;
+  }
 
-      // Drag a tile onto another to move it there; the bookmark itself moves, so Chrome stays in step.
-      a.addEventListener('dragstart', e => {
-        dragFrom = i;
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('application/x-start-app', String(i));
-        a.classList.add('dragging');
-      });
-      a.addEventListener('dragend', () => {
-        dragFrom = null;
-        box.querySelectorAll('.dragging, .drop-before, .drop-after').forEach(n => n.classList.remove('dragging', 'drop-before', 'drop-after'));
-      });
-      a.addEventListener('dragover', e => {
-        if (dragFrom === null || dragFrom === i) return;
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        a.classList.add(dragFrom < i ? 'drop-after' : 'drop-before');
-      });
-      a.addEventListener('dragleave', () => a.classList.remove('drop-before', 'drop-after'));
-      a.addEventListener('drop', async e => {
-        if (dragFrom === null || dragFrom === i) return;
-        e.preventDefault();
-        const from = items[dragFrom];
-        const after = dragFrom < i;
-        dragFrom = null;
-        try {
-          await Platform.moveApp(from, b, after);
-          await renderApps();
-        } catch { toast('Couldn’t move that bookmark'); }
-      });
-      box.append(a);
-    });
+  function layoutApps() {
+    const box = $('#apps');
+    const capacity = appsCapacity();
+    const overflow = allApps.length + 1 > capacity; // +1 for the Add tile
+    const shown = overflow ? allApps.slice(0, capacity - 1) : allApps;
+    box.replaceChildren(...shown.map((b, i) => appTile(b, i, true)));
+    box.append(overflow ? moreTile(allApps.length - shown.length, allApps.slice(shown.length)) : addTile());
+  }
 
+  function addTile() {
     const add = document.createElement('button');
     add.type = 'button';
     add.className = 'app add';
     add.innerHTML = '<svg class="i" aria-hidden="true"><use href="#i-plus"/></svg><span>Add</span>';
     add.addEventListener('click', openAddApp);
-    box.append(add);
+    return add;
+  }
+
+  // "+N more": a small stack of the hidden apps' icons over the count.
+  function moreTile(count, hidden) {
+    const more = document.createElement('button');
+    more.type = 'button';
+    more.className = 'app more';
+    more.setAttribute('aria-label', `${count} more app${count === 1 ? '' : 's'}: show all apps`);
+    const stack = document.createElement('span');
+    stack.className = 'stack';
+    hidden.slice(0, 3).forEach(b => {
+      const img = new Image(20, 20);
+      img.alt = ''; img.src = Platform.favicon(b.url);
+      stack.append(img);
+    });
+    const label = document.createElement('span');
+    label.textContent = `+${count} more`;
+    more.append(stack, label);
+    more.addEventListener('click', openAllApps);
+    return more;
+  }
+
+  function appTile(b, i, draggable) {
+    const a = document.createElement('a');
+    a.className = 'app';
+    a.href = b.url;
+    a.title = b.title || b.url;
+    const img = new Image(28, 28);
+    img.alt = ''; img.loading = 'eager'; img.draggable = false;
+    img.src = Platform.favicon(b.url);
+    const label = document.createElement('span');
+    label.textContent = appName(b);
+    a.append(img, label);
+    if (!draggable) return a;
+    a.draggable = true;
+    const box = $('#apps');
+    if (i < 9) {
+      const k = document.createElement('kbd');
+      k.textContent = `Alt ${i + 1}`;
+      a.append(k);
+    }
+
+    // Drag a tile onto another to move it there; the bookmark itself moves, so Chrome stays in step.
+    a.addEventListener('dragstart', e => {
+      dragFrom = i;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('application/x-start-app', String(i));
+      a.classList.add('dragging');
+    });
+    a.addEventListener('dragend', () => {
+      dragFrom = null;
+      box.querySelectorAll('.dragging, .drop-before, .drop-after').forEach(n => n.classList.remove('dragging', 'drop-before', 'drop-after'));
+    });
+    a.addEventListener('dragover', e => {
+      if (dragFrom === null || dragFrom === i) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      a.classList.add(dragFrom < i ? 'drop-after' : 'drop-before');
+    });
+    a.addEventListener('dragleave', () => a.classList.remove('drop-before', 'drop-after'));
+    a.addEventListener('drop', async e => {
+      if (dragFrom === null || dragFrom === i) return;
+      e.preventDefault();
+      const from = allApps[dragFrom];
+      const after = dragFrom < i;
+      dragFrom = null;
+      try {
+        await Platform.moveApp(from, b, after);
+        await renderApps();
+      } catch { toast('Couldn’t move that bookmark'); }
+    });
+    return a;
+  }
+
+  /* All apps: every bookmark in the folder, with a filter. Enter opens the first match. */
+  function renderAllApps() {
+    const grid = $('#all-apps-grid');
+    const q = $('#apps-filter').value.trim().toLowerCase();
+    const matches = allApps.filter(b => !q || appName(b).toLowerCase().includes(q) || b.url.toLowerCase().includes(q));
+    grid.replaceChildren(...matches.map(b => appTile(b, -1, false)));
+    if (!matches.length) {
+      grid.append(Object.assign(document.createElement('p'), {
+        className: 'apps-empty',
+        textContent: allApps.length ? `No apps match “${$('#apps-filter').value.trim()}”.` : 'No apps yet. Add one below.',
+      }));
+    }
+    $('#all-apps-title').textContent = `All apps (${allApps.length})`;
+  }
+
+  function openAllApps() {
+    $('#apps-filter').value = '';
+    renderAllApps();
+    $('#all-apps').showModal();
+    $('#apps-filter').focus();
+  }
+
+  function initAllApps() {
+    const dlg = $('#all-apps');
+    $('#apps-filter').addEventListener('input', renderAllApps);
+    $('#apps-filter').addEventListener('keydown', e => {
+      if (e.key !== 'Enter') return;
+      const first = $('#all-apps-grid a.app');
+      if (first) { e.preventDefault(); location.href = first.href; }
+    });
+    $('#all-apps-close').addEventListener('click', () => dlg.close());
+    $('#all-apps-add').addEventListener('click', () => { dlg.close(); openAddApp(); });
+    $('#all-apps-edit').addEventListener('click', () => {
+      if (Platform.isExtension) Platform.openBookmarkManager(appsFolderId);
+      else toast('Opens Chrome’s bookmark manager once installed');
+    });
+    dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); }); // a click on the backdrop closes it
+    // The space the grid gets changes with the window and the quote's length: re-fit when it does.
+    let fitTimer = null;
+    new ResizeObserver(() => {
+      clearTimeout(fitTimer);
+      fitTimer = setTimeout(layoutApps, 60);
+    }).observe($('.apps-panel'));
   }
 
   function initAppKeys() {
@@ -236,8 +336,8 @@
     document.addEventListener('keydown', e => {
       if (e.key === 'Alt') box.classList.add('show-keys');
       if (e.altKey && /^[1-9]$/.test(e.key)) {
-        const link = box.querySelectorAll('a.app')[Number(e.key) - 1];
-        if (link) { e.preventDefault(); location.href = link.href; }
+        const app = allApps[Number(e.key) - 1]; // the first nine apps, shown or behind "more"
+        if (app) { e.preventDefault(); location.href = app.url; }
       }
     });
     const hide = () => box.classList.remove('show-keys');
@@ -1335,6 +1435,7 @@
     initQuotes();
     initAppKeys();
     initAddApp();
+    initAllApps();
     initSettings();
     initDrop();
     initWallpaperKeys();

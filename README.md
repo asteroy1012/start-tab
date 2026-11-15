@@ -22,6 +22,7 @@ Chrome shows a "Customize Chrome" bar under every new tab page that comes from a
 The page shows the sites in a bookmarks folder called **Dashboard**. Create one anywhere in your bookmarks (the bookmarks bar is easiest) and add sites to it. Without that folder, the sites on your bookmarks bar are shown.
 
 - **Add** on the page saves a new bookmark into the folder (it creates the folder if needed).
+- **Lots of apps:** the page shows as many tiles as fit above the player (up to four rows). The rest sit behind the last tile, **+N more**, which opens **All apps**: every app in the folder, with a **Find an app** box (type, then Enter to open the first match).
 - **Drag a tile** onto another to reorder. The bookmark moves too, so Chrome's bookmarks stay in the same order.
 - **Edit** opens Chrome's bookmark manager at that folder, where you can rename or remove.
 - **Alt + 1 to 9** opens the first nine apps. Hold **Alt** to see the numbers.

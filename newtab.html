@@ -234,6 +234,24 @@
   <div><svg class="i" aria-hidden="true"><use href="#i-image"/></svg><p>Drop to hang it on the wall</p></div>
 </div>
 
+<dialog id="all-apps" aria-labelledby="all-apps-title">
+  <div class="sheet apps-sheet">
+    <header class="sheet-head">
+      <h2 id="all-apps-title">All apps</h2>
+      <button type="button" class="ghost" id="all-apps-close" aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button>
+    </header>
+    <label class="filter">
+      <svg class="i" aria-hidden="true"><use href="#i-search"/></svg>
+      <input id="apps-filter" type="text" autocomplete="off" spellcheck="false" placeholder="Find an app" aria-label="Find an app">
+    </label>
+    <div class="apps all" id="all-apps-grid"></div>
+    <div class="row-actions">
+      <button type="button" class="pill quiet" id="all-apps-add">Add app</button>
+      <button type="button" class="link" id="all-apps-edit">Edit in Chrome bookmarks</button>
+    </div>
+  </div>
+</dialog>
+
 <dialog id="add-app" aria-labelledby="add-title">
   <form method="dialog" class="sheet small" id="add-form">
     <header class="sheet-head">
