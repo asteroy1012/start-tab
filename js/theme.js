@@ -18,13 +18,20 @@ const Theme = (() => {
 
   const hsl = (h, s, l) => `hsl(${h.toFixed(1)} ${(s * 100).toFixed(1)}% ${(l * 100).toFixed(1)}%)`;
 
+  // Every poster hangs in a 2:3 frame (css/style.css, --poster-ratio) and is trimmed evenly to fit,
+  // so only the part that shows is read: its left edge is the one that meets the page.
+  const FRAME = 2 / 3;
+
   function analyse(img) {
+    const iw = img.naturalWidth, ih = img.naturalHeight;
+    let sx = 0, sy = 0, sw = iw, sh = ih;
+    if (iw / ih > FRAME) { sw = ih * FRAME; sx = (iw - sw) / 2; } else { sh = iw / FRAME; sy = (ih - sh) / 2; }
     const w = 64;
-    const h = Math.max(1, Math.round((img.naturalHeight / img.naturalWidth) * w));
+    const h = Math.round(w / FRAME);
     const canvas = document.createElement('canvas');
     canvas.width = w; canvas.height = h;
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    ctx.drawImage(img, 0, 0, w, h);
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
     const px = ctx.getImageData(0, 0, w, h).data;
 
     // Left edge: average of the two outermost columns.

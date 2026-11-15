@@ -441,7 +441,7 @@
     if (!src) { toast(`Couldn’t load ${w.name}`); return; }
     img.onload = () => {
       // Discover pictures change too often to be worth remembering; your own are analysed once.
-      const key = w.discover ? null : `theme.v1.${w.id}`;
+      const key = w.discover ? null : `theme.v2.${w.id}`; // v2: read from the 2:3 frame, not the whole picture
       let t = key && FastCache.get(key);
       if (!t) {
         try { t = Theme.analyse(img); if (key) FastCache.set(key, t); } catch { t = null; }
